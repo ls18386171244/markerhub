@@ -11,10 +11,13 @@ import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.ExpiredCredentialsException;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
+import org.apache.shiro.web.util.WebUtils;
 import org.mockito.internal.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -49,7 +52,7 @@ public class JwtFilter extends AuthenticatingFilter {
 
     @Override
     protected boolean onAccessDenied(ServletRequest servletRequest, ServletResponse servletResponse) throws Exception {
-        HttpServerRequest request = (HttpServerRequest) servletRequest;
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
         String jwt = request.getHeader("Authorization");
         if (StringUtils.isEmpty(jwt)) { //表示无jwt
             return true;
@@ -78,5 +81,22 @@ public class JwtFilter extends AuthenticatingFilter {
 
         }
         return false;
+    }
+
+    // 解决跨域
+
+    @Override
+    protected boolean preHandle(ServletRequest request, ServletResponse response) throws Exception {
+        HttpServletRequest servletRequest = WebUtils.toHttp(request);
+        HttpServletResponse servletResponse = WebUtils.toHttp(response);
+        servletResponse.setHeader("Access-Control-Allow-Origin", servletRequest.getHeader("Origin"));
+        servletResponse.setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE,PUT");
+        servletResponse.setHeader("Access-Control-Allow-Headers", servletRequest.getHeader("Access-Control-Request-Headers"));
+        // 跨域时回显发送一个OPTIONS请求， 以下代码给OPTIONS请求直接返回正常状态
+        if (servletRequest.getMethod().equals(RequestMethod.OPTIONS.name())){
+            servletResponse.setStatus(org.springframework.http.HttpStatus.OK.value());
+            return false;
+        }
+        return super.preHandle(request, response);
     }
 }

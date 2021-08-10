@@ -55,12 +55,12 @@ public class ShiroConfig {
     public ShiroFilterChainDefinition shiroFilterChainDefinition(){
         DefaultShiroFilterChainDefinition chainDefinition=new DefaultShiroFilterChainDefinition();
         LinkedHashMap<String, String> filterMap = new LinkedHashMap<>();
-        filterMap.put("/**","authc");  //主要通过注解方式校验权限
+        filterMap.put("/**","jwt");  //主要通过注解方式校验权限
         chainDefinition.addPathDefinitions(filterMap);
         return chainDefinition;
     }
 
-    @Bean("ShiroFilterFactoryBean")
+    @Bean("shiroFilterFactoryBean")
     public ShiroFilterFactoryBean shiroFilterFactoryBean(SecurityManager securityManager, ShiroFilterChainDefinition shiroFilterChainDefinition){
         ShiroFilterFactoryBean shiroFilter=new ShiroFilterFactoryBean();
         shiroFilter.setSecurityManager(securityManager);
